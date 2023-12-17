@@ -112,7 +112,9 @@ def dispatcher(script, typeOf, arguments):
     print("Executing script: " + cmd + path + " " + arguments)
     proc = subprocess.run(
         cmd + path + " " + arguments,
-        shell=True,  # TODO Try to remove this shell=True to improve security
+        # TODO Try to remove this shell=True to improve security
+        # trunk-ignore(bandit/B602)
+        shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
