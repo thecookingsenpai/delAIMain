@@ -1,17 +1,6 @@
 {
-    "pyVersion": {
-        "script": "pyVersion.py",
-        "type": "python",
-        "description": "View info on the python version"
-    },
-    "kernelInfo": {
-        "script": "kernelInfo.sh",
-        "type": "bash",
-        "description": "View info on the kernel version"
-    },
-    "nodeVersion": {
-        "script": "nodeVersion.js",
-        "type": "javascript",
-        "description": "View info on the js version"
-    }
+  "tts": false,
+  "face": false,
+  "model": "mistral-7b-openorca.Q4_0.gguf",
+  "supported_languages": ["python", "tsx", "tsc", "perl", "php", "ruby"]
 }

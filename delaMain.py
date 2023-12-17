@@ -1,21 +1,33 @@
-from gpt4all import GPT4All
 import json
 import os
 import subprocess
+
 import pyttsx3
-engine = pyttsx3.init() # FIXME aplay error?
+from gpt4all import GPT4All
 
-face_process = None
-tts = False
-face = True
+engine = pyttsx3.init()  # FIXME aplay error?
 
-model = GPT4All(model_name='mistral-7b-openorca.Q4_0.gguf')
-with open("config.json", "r") as f:
-    config = json.load(f)
+
+# ANCHOR Configuration and pre-flight globals
+config = None
+with open("config.json", "r") as conf:
+    config = json.load(conf)
     print("Loaded configuration:")
     for key, value in config.items():
         print(key, value)
+config["face_process"] = None
 
+model = GPT4All(model_name=config["model"])
+
+# ANCHOR Modules loading
+with open("modules.json", "r") as f:
+    modules = json.load(f)
+    print("Loaded configuration:")
+    for key, value in modules.items():
+        print(key, value)
+
+
+# NOTE Chat handler: this is the main loop for the program to work
 def chat_session():
     global tts
     print(".:: Delamain is starting ::.")
@@ -23,18 +35,18 @@ def chat_session():
         # Endless chat session with ctrl-c interrupt
         try:
             # Being polite is important
-            output = model.generate(prompt='Hello!')
+            output = model.generate(prompt="Hello!")
             print("Delamain > " + output)
             while True:
-                text = input('> ')
+                text = input("> ")
                 # Custom modules
                 is_done = view_modules(text)
                 if is_done:
                     continue
                 # SECTION Built in modules are defined here
                 # Also 'exit' can be used to exit the chat session
-                if text == 'exit':
-                    print('Exiting...')
+                if text == "exit":
+                    print("Exiting...")
                     do_exit()
                 elif text.startswith("complete the following: "):
                     to_complete = text.split("complete the following: ")[1]
@@ -46,46 +58,51 @@ def chat_session():
                     output = model.generate(text, max_tokens=1024)
                 # Is reply time!
                 print("Delamain >" + output)
-                if tts:
+                if config["tts"]:
                     engine.say(output)
                     engine.runAndWait()
         except KeyboardInterrupt:
-            print('Exiting...')
+            print("Exiting...")
             do_exit()
+
 
 # INFO Simple completion module
 def complete(text):
-    tokens = []
-    for token in model.generate(text, max_tokens=20, streaming=True):
-        tokens.append(token)
-    output = tokens.join(" ")
+    output = model.generate(text, max_tokens=20)
     return output
+
 
 # INFO Priority to custom modules
 def view_modules(text):
     # SECTION Modules are defined here
+    global modules
     is_done = False
-    for key, value in config.items():
+    for key, value in modules.items():
         if text.startswith(key):
             is_done = True
             arguments = text.split(key)[1]
             if arguments == "":
                 print("Warning: no arguments given for module: " + key)
-            script = value['script']
-            typeOf = value['type']
-            description = value['description']
+            script = value["script"]
+            typeOf = value["type"]
+            description = value["description"]
             print("Executing script: " + description)
             dispatcher(script, typeOf, arguments)
     return is_done
 
+
 # INFO Heavy work is done here
 def dispatcher(script, typeOf, arguments):
-    global tts
+    global config
     cmd = ""
     # NOTE We avoid defining types that have the same syntax as the invocation module
     if typeOf == "javascript":
         cmd = "node "
     else:
+        supported_languages = config["supported_languages"]
+        if typeOf not in supported_languages:
+            print("Language not officially supported: " + typeOf)
+            print("Trying to append it like a standalone binary: " + typeOf)
         cmd = typeOf + " "
     # Finding the script
     path = os.path.dirname(os.path.realpath(__file__)) + "/scripts/" + script
@@ -94,23 +111,30 @@ def dispatcher(script, typeOf, arguments):
         return
     # Executing the script
     print("Executing script: " + cmd + path + " " + arguments)
-    proc = subprocess.run(cmd + path + " " + arguments, shell=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.run(
+        cmd + path + " " + arguments,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
     out = proc.stdout.decode("utf-8")
     print(out)
-    if tts:
+    if config["tts"]:
         engine.say(out)
         engine.runAndWait()
 
+
 # Terminating gracefully
 def do_exit():
-    global face_process
-    if face_process:
-        face_process.terminate()
+    global config
+    if config["face_process"]:
+        config["face_process"].terminate()
     exit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Starting face in background
-    if face:
-        face_process = subprocess.Popen(["python3", "face.py"])
+    if config["face"]:
+        config["face_process"] = subprocess.Popen(["python3", "face.py"])
     # Chatting session
     chat_session()
