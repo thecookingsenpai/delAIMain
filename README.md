@@ -63,6 +63,20 @@ By setting the parameter 'face' to 'true', Delaimain will spawn a little window 
 
 The TTS module is currently not working and is a work in progress.
 
+## Future features
+
+The following features are ordered by priority but they can change anytime.
+Contributions to this features are welcome and prioritized: please open an issue to notify the others of your contribution.
+Feedback is greatly appreciated.
+
+[ ] Working TTS engine (feel free to change the library used)
+[ ] Smoother face.py engine and management (now is an horrible subprocess)
+[ ] CLI Interface (using https://www.textualize.io)
+[ ] Microphone support (privacy oriented of course)
+[ ] Consequently, hotword support using or on the model of https://thalhammer.github.io/snowman/ or any other alternative that works
+[ ] face.py animations
+[ ] Better overall user experience
+
 ## Contributing
 
 We welcome contributions from the community to help make Delaimain even better. If you would like to contribute, please follow these steps:
