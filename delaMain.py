@@ -54,7 +54,6 @@ def chat_session():
                     output = complete(to_complete)
                 else:
                     # Here delamain generates its own message if nothing has been requested above
-                    tokens = []
                     output = model.generate(text, max_tokens=1024)
                 # Is reply time!
                 print("Delamain >" + output)
@@ -113,7 +112,7 @@ def dispatcher(script, typeOf, arguments):
     print("Executing script: " + cmd + path + " " + arguments)
     proc = subprocess.run(
         cmd + path + " " + arguments,
-        shell=True,
+        shell=True,  # TODO Try to remove this shell=True to improve security
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
